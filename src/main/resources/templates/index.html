@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" type="image/png" href="/BFS.jpg"/>
+  <title>Tìm kiếm theo chiều rộng</title>
+  <style>
+    body{
+      font-family: 'Lato', sans-serif;
+    }
+    h2{
+      float:left;
+      margin:40px 0 0 100px;
+    }
+    form{
+      width: 800px;
+      margin:30px 100px 0 50px;
+      border: 1px solid #dfe1e5;
+      border-radius: 10px;
+      padding: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      float:left;
+      position: relative;
+    }
+    input[type="search"] {
+      height: 44px;
+      padding: 15px 15px 15px 50px;
+      width: 700px;
+      border: none;
+      border-radius: 10px 0 0 10px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    #icon-search{
+      width: 19px;
+      height: 19px;
+      background-image: url("https://img.icons8.com/?size=512&id=132&format=png");
+      background-size: cover;
+      position: absolute;
+      top:12px;
+      left: 15px;
+    }
+
+    button {
+      width: 100px;
+      height: 44px;
+      border: none;
+      background: #1A77F2;
+      font-weight: 400;
+      font-size: 14px;
+      color: white;
+      border-radius: 0 10px 10px 0;
+      position: absolute;
+      right: 0;
+      cursor: pointer;
+    }
+
+    #search-results {
+      float:left;
+      width: 900px;
+      border-radius: 8px;
+      padding: 16px 100px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      margin: 30px 200px 50px 200px;
+    }
+
+    #search-results ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #search-results li {
+      margin-bottom: 16px;
+    }
+
+    #search-results a {
+      font-weight: bold;
+      color: #106EBE;
+      text-decoration: none;
+    }
+
+    #search-results p {
+      margin: 8px 0 0;
+      color: #424242;
+
+    }
+  </style>
+</head>
+<body>
+<h2>Breadth First Search</h2>
+<form id="search-form" action="/search" method="GET" role="search">
+  <div id="icon-search"></div>
+  <input id="search" name="query" type="search" placeholder="Nhập từ khóa..." autofocus required />
+  <button type="submit">Go</button>
+</form>
+
+<div id="search-results"></div>
+
+<script>
+  document.getElementById('search-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const query = document.getElementById('search').value.trim();
+
+    fetch(`/search?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+              const resultsContainer = document.getElementById('search-results');
+              resultsContainer.innerHTML = `<h1>Kết quả tìm kiếm cho "${query}"</h1>`;
+              if (data.length > 0) { // Sửa đổi ở đây
+                const ul = document.createElement('ul');
+                data.forEach(result => { // Sửa đổi ở đây
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.href = result.webPage.url; // Sửa đổi ở đây
+                  a.textContent = result.webPage.title; // Sửa đổi ở đây
+
+                  const snippet = extractSnippet(result.webPage.content, result.webPage.title, query.split(/\s+/)); // Sửa đổi ở đây
+
+                  const p = document.createElement('p');
+                  p.innerHTML = snippet;
+                  li.appendChild(a);
+                  li.appendChild(p);
+                  ul.appendChild(li);
+                });
+                resultsContainer.appendChild(ul);
+              } else {
+                resultsContainer.innerHTML += `<p>No results found for "${query}"</p>`;
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching search results:', error);
+            });
+  });
+
+
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Đảo ngược các kí tự đặc biệt
+  }
+
+  function extractSnippet(content, title, keywords) {
+    const maxSnippetLength = 500; // Độ dài tối đa của đoạn trích dẫn
+
+    // Tạo một mảng chứa cả nội dung và tiêu đề
+    const combinedText = title + ' ' + content;
+
+    // Tách nội dung thành các câu. Biểu thức chính quy này có thể không xử lý tất cả các trường hợp đặc biệt.
+    const sentences = combinedText.match(/[^.!?]*[.!?]/g) || [combinedText];
+
+    // Tìm các câu chứa bất kỳ từ khóa nào
+    let snippets = [];
+    for (const keyword of keywords) {
+      const trimmedKeyword = keyword.trim(); // Loại bỏ các dấu cách ở đầu và cuối từ khóa
+      const escapedKeyword = escapeRegExp(trimmedKeyword); // Xử lý kí tự đặc biệt trong từ khóa
+      const keywordRegex = new RegExp(`\\b${escapeRegExp(escapedKeyword)}\\b`, 'gi'); // Tạo biểu thức chính quy
+
+      for (const sentence of sentences) {
+        if (keywordRegex.test(sentence)) {
+          snippets.push(sentence.trim());
+        }
+      }
+    }
+
+    // Kết hợp các câu thành một đoạn trích dẫn duy nhất, đảm bảo không vượt quá độ dài tối đa
+    let snippet = snippets.join(' ... ');
+    if (snippet.length > maxSnippetLength) {
+      snippet = snippet.substring(0, maxSnippetLength) + '...';
+    }
+
+    // In đậm từ khóa trong đoạn trích dẫn
+    for (const keyword of keywords) {
+      const trimmedKeyword = keyword.trim(); // Loại bỏ các dấu cách ở đầu và cuối từ khóa
+      const escapedKeyword = escapeRegExp(trimmedKeyword); // Xử lý kí tự đặc biệt trong từ khóa
+      const keywordRegex = new RegExp(`(${escapedKeyword})`, 'gi'); // Tạo biểu thức chính quy
+      snippet = snippet.replace(keywordRegex, '<strong>$1</strong>');
+    }
+
+    return snippet;
+  }
+</script>
+</body>
+</html>
