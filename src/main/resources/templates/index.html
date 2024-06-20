@@ -108,13 +108,13 @@
             .then(data => {
               const resultsContainer = document.getElementById('search-results');
               resultsContainer.innerHTML = `<h1>Kết quả tìm kiếm cho "${query}"</h1>`;
-              if (data.length > 0) { // Sửa đổi ở đây
+              if (data.length > 0) {
                 const ul = document.createElement('ul');
-                data.forEach(result => { // Sửa đổi ở đây
+                data.forEach(result => {
                   const li = document.createElement('li');
                   const a = document.createElement('a');
-                  a.href = result.webPage.url; // Sửa đổi ở đây
-                  a.textContent = result.webPage.title; // Sửa đổi ở đây
+                  a.href = result.webPage.url;
+                  a.textContent = result.webPage.title;
 
                   const snippet = extractSnippet(result.webPage.content, result.webPage.title, query.split(/\s+/)); // Sửa đổi ở đây
 

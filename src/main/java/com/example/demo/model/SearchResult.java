@@ -31,7 +31,7 @@ public class SearchResult {
             int count = StringUtils.countOccurrencesOf(text.toLowerCase(), keyword.toLowerCase());
             score += count * weight; // Nhân với trọng số
         }
-        // Bạn có thể thêm điều kiện để kiểm tra trùng khớp chính xác và tăng điểm số thêm nữa
+
         if (text.equalsIgnoreCase(String.join(" ", keywords))) {
             score *= 10; // Giả sử tăng điểm số lên 10 lần nếu có trùng khớp chính xác
         }

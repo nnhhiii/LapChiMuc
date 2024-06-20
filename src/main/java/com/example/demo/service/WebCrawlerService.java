@@ -27,40 +27,49 @@ public class WebCrawlerService {
 
     public void crawl(String url, int maxPages) {
         Queue<String> queue = new LinkedList<>();
-        Set<String> visited = new HashSet<>();
         int count = 0;
 
-        queue.add(normalizeUrl(url)); // Chuẩn hóa URL trước khi thêm vào hàng đợi
+        queue.add(normalizeUrl(url)); // Normalize URL before adding to the queue
 
         while (!queue.isEmpty() && count < maxPages) {
             String currentUrl = queue.poll();
 
-            // Chuẩn hóa mọi URL trước khi kiểm tra
+            // Normalize every URL before checking
             currentUrl = normalizeUrl(currentUrl);
+            System.out.println("Processing URL: " + currentUrl);
 
-            if (!visited.contains(currentUrl) && !webPageRepository.existsByUrl(currentUrl)) {
+            if (!webPageRepository.existsByUrl(currentUrl)) {
                 try {
                     String htmlContent = fetchHtmlContent(currentUrl);
                     WebPage webPage = extractWebPage(currentUrl, htmlContent);
 
                     webPageRepository.save(webPage);
+                    System.out.println("Saved URL: " + currentUrl);
 
-                    // Duyệt qua các liên kết nội bộ
+                    // Traverse internal links
                     for (String internalLink : webPage.getInternalLinks()) {
-                        queue.add(internalLink);
+                        String normalizedInternalLink = normalizeUrl(internalLink);
+                        if (!webPageRepository.existsByUrl(normalizedInternalLink)) {
+                            queue.add(normalizedInternalLink);
+                            System.out.println("Added internal link to queue: " + normalizedInternalLink);
+                        }
                     }
 
-                    // Đánh dấu URL hiện tại như đã được duyệt
-                    visited.add(currentUrl);
-
-                    // Chỉ tăng count khi một URL mới được duyệt
+                    // Only increment count when a new URL is processed
                     count++;
+                    System.out.println("Current count: " + count);
                 } catch (IOException | InterruptedException e) {
                     System.out.println("Error fetching HTML content: " + e.getMessage());
                 }
+            } else {
+                System.out.println("URL already exists in database: " + currentUrl);
             }
         }
     }
+
+
+
+
 
 
     // Phương thức để chuẩn hóa URL bằng cách loại bỏ các phần kí tự đặc biệt ở cuối
@@ -70,10 +79,19 @@ public class WebCrawlerService {
         if (hashIndex != -1) {
             url = url.substring(0, hashIndex);
         }
+
+        // Chuẩn hóa phần cuối của URL để loại bỏ các ký tự đặc biệt như '/'
+        while (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+
         return url;
     }
+
     private String fetchHtmlContent(String url) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         return response.body();
     }
