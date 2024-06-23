@@ -55,7 +55,7 @@ public class WebCrawlerService {
                         }
                     }
 
-                    // Only increment count when a new URL is processed
+
                     count++;
                     System.out.println("Current count: " + count);
                 } catch (IOException | InterruptedException e) {

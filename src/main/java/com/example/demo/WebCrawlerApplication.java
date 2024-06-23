@@ -19,7 +19,7 @@ public class WebCrawlerApplication {
 
     @PostConstruct
     public void startCrawling() {
-        webCrawlerService.crawl("https://vnexpress.net/", 30);
+        webCrawlerService.crawl("https://vnexpress.net/", 50);
     }
 }
 

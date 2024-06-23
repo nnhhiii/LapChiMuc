@@ -25,7 +25,7 @@ public class SearchController {
 
     @GetMapping("/search")
     @ResponseBody
-    public ResponseEntity<?> search(@RequestParam String query) {
+    public List<SearchResult> search(@RequestParam String query) {
         String[] keywords = query.split("\\s+");
         List<SearchResult> searchResults = new ArrayList<>(); // Sử dụng List để lưu trữ kết quả
 
@@ -38,14 +38,14 @@ public class SearchController {
                     searchResults.add(searchResult);
                 }
             }
-        }
 
-        // Tìm kiếm theo URL
-        List<WebPage> urlResults = webPageRepository.findByUrlContainingIgnoreCase(query);
-        for (WebPage result : urlResults) {
-            SearchResult searchResult = new SearchResult(result, keywords);
-            if (!containsResult(searchResults, searchResult)) {
-                searchResults.add(searchResult);
+            // Tìm kiếm theo URL
+            List<WebPage> urlResults = webPageRepository.findByUrlContainingIgnoreCase(keyword);
+            for (WebPage result : urlResults) {
+                SearchResult searchResult = new SearchResult(result, keywords);
+                if (!containsResult(searchResults, searchResult)) {
+                    searchResults.add(searchResult);
+                }
             }
         }
 
@@ -53,7 +53,7 @@ public class SearchController {
         // Sắp xếp danh sách kết quả
         searchResults.sort(Comparator.comparingDouble(SearchResult::getScore).reversed());
 
-        return ResponseEntity.ok(searchResults);
+        return searchResults;
     }
 
     // Phương thức để kiểm tra xem kết quả đã tồn tại trong danh sách chưa

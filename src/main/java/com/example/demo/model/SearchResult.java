@@ -17,11 +17,11 @@ public class SearchResult {
     }
 
     private double calculateScore(WebPage webPage, String[] keywords) {
-        double titleScore = calculateScoreForKeywords(webPage.getTitle(), keywords, 10.0); // Trọng số cho tiêu đề là 2.0
+        double titleScore = calculateScoreForKeywords(webPage.getTitle(), keywords, 10.0); // Trọng số cho tiêu đề là 10.0
         double contentScore = calculateScoreForKeywords(webPage.getContent(), keywords, 1.0); // Trọng số cho nội dung là 1.0
         double urlScore = calculateScoreForKeywords(webPage.getUrl(), keywords, 20.0); // Trọng số cho URL là 20.0
 
-        // Tính điểm số tổng cộng, với ưu tiên cao hơn cho tiêu đề và URL
+        // Tính điểm số tổng cộng
         return titleScore + contentScore + urlScore;
     }
 
